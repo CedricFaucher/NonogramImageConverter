@@ -3,9 +3,6 @@ package com.example.nonogramimageconverter.image;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.awt.*;
-import java.util.List;
-
 @RestController
 public class ImageController {
     private final ImageService service;
@@ -14,8 +11,13 @@ public class ImageController {
         this.service = service;
     }
 
-    @GetMapping("/image")
-    public List<Color> getColorsFromImage() {
-        return service.getColorsFromImage();
+    @GetMapping("/image/grayScale")
+    public void produceGrayScaleImage() {
+        service.produceGrayScaleImage();
+    }
+
+    @GetMapping("/image/blackAndWhite")
+    public void produceBlackAndWhiteImage() {
+        service.produceBlackAndWhiteImage();
     }
 }
