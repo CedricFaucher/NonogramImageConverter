@@ -44,8 +44,8 @@ public class ImageService {
         }
     }
 
-    // Function that will take an image and returns a black and white image.
-    public void produceBlackAndWhiteImage() {
+    // Function that will take an image and an optional otsusVariable and returns a black and white image.
+    public void produceBlackAndWhiteImage(Optional<Integer> otsusVariable) {
         List<Color> colorList = getColorListFromImage();
         List<Integer> computableGrayScale = new ArrayList<>();
 
@@ -58,7 +58,7 @@ public class ImageService {
             computableGrayScale.add(gray);
         });
 
-        BufferedImage image = getBlackAndWhiteImageFromGrayScaleList(computableGrayScale, Optional.empty());
+        BufferedImage image = getBlackAndWhiteImageFromGrayScaleList(computableGrayScale, otsusVariable);
 
         File file = new File("blackAndWhiteResult.png");
 

@@ -1,7 +1,10 @@
 package com.example.nonogramimageconverter.image;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 @RestController
 public class ImageController {
@@ -17,7 +20,7 @@ public class ImageController {
     }
 
     @GetMapping("/image/blackAndWhite")
-    public void produceBlackAndWhiteImage() {
-        service.produceBlackAndWhiteImage();
+    public void produceBlackAndWhiteImage(@RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable) {
+        service.produceBlackAndWhiteImage(otsusVariable);
     }
 }
