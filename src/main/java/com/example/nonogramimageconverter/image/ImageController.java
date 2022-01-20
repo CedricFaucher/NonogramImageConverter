@@ -23,4 +23,10 @@ public class ImageController {
     public void produceBlackAndWhiteImage(@RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable) {
         service.produceBlackAndWhiteImage(otsusVariable);
     }
+
+    // 9 bits for width, 9 bits for height, rest for image
+    @GetMapping("/image/string")
+    public String getStringFromImage(@RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable) {
+        return service.getStringFromImage(otsusVariable);
+    }
 }

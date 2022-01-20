@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
+import static com.example.nonogramimageconverter.utils.BinaryConversion.convertIntegerToBinaryString;
+
 @Service
 public class ImageService {
 
@@ -69,12 +71,42 @@ public class ImageService {
         }
     }
 
+    // Function that will take in an image and an optional Otsu's variable and that will output a string of zeroes and ones
+    // It works only for image up to a resolution of 256x256
+    public String getStringFromImage(Optional<Integer> otsusVariable) {
+        List<Color> colorList = getColorListFromImage();
+        List<Integer> computableGrayScale = new ArrayList<>();
+
+        if (width > 256 && height > 256) {
+            return "Wrong resolution for image. It should be maximum 256x256";
+        }
+
+        colorList.forEach(color -> {
+            double red = color.getRed() * RED_WEIGHT;
+            double green = color.getGreen() * GREEN_WEIGHT;
+            double blue = color.getBlue() * BLUE_WEIGHT;
+
+            int gray = (int) Math.round(red + green + blue);
+            computableGrayScale.add(gray);
+        });
+
+        String widthInBinary = convertIntegerToBinaryString(width);
+        String heightInBinary = convertIntegerToBinaryString(height);
+        String zeroesAndOnes = getStringOfZeroesAndOnesFromGrayScaleList(computableGrayScale, otsusVariable);
+
+        return "0".repeat(9 - widthInBinary.length()) +
+                widthInBinary +
+                "0".repeat(9 - heightInBinary.length()) +
+                heightInBinary +
+                zeroesAndOnes;
+    }
+
     // Function that will take an image and returns a list of colors from the image.
     // It will also set up global height and width variables.
     private List<Color> getColorListFromImage() {
         BufferedImage img = null;
         try {
-            img = ImageIO.read(new File("/Users/cfaucher/Dev/NonogramImageConverter/src/main/resources/turtle.jpg"));
+            img = ImageIO.read(new File("/Users/cfaucher/Dev/NonogramImageConverter/src/main/resources/yoshi.png"));
         } catch (IOException e) {
             System.out.println("pow");
         }
@@ -124,6 +156,26 @@ public class ImageService {
         });
 
         return getImageFromColorList(blackAndWhiteColors);
+    }
+
+    // Function that takes a list of grayScale represented by integers and returns a string of zeroes and ones.
+    // This function also takes an optional otsusVariable that can alter the weight for the black vs white.
+    private String getStringOfZeroesAndOnesFromGrayScaleList(List<Integer> grayScales, Optional<Integer> otsusVariable) {
+        int otsus = otsusVariable.orElseGet(() -> otsusMethod(grayScales));
+
+        StringBuilder zeroesAndOnes = new StringBuilder();
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                int gray = grayScales.get((j * height) + i);
+                if (gray >= otsus) {
+                    zeroesAndOnes.append("0");
+                } else {
+                    zeroesAndOnes.append("1");
+                }
+            }
+        }
+
+        return zeroesAndOnes.toString();
     }
 
     // Function that takes a list of grayScale represented by integers and returns the result of the Otsu's method.
