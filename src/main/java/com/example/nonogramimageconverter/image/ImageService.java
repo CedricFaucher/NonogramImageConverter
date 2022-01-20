@@ -1,6 +1,7 @@
 package com.example.nonogramimageconverter.image;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -22,8 +23,8 @@ public class ImageService {
     private int height = 0;
 
     // Function that will take an image and returns a gray scale image.
-    public void produceGrayScaleImage() {
-        List<Color> colorList = getColorListFromImage();
+    public void produceGrayScaleImage(MultipartFile image) {
+        List<Color> colorList = getColorListFromImage(image);
         List<Color> grayScale = new ArrayList<>();
 
         colorList.forEach(color -> {
@@ -35,20 +36,20 @@ public class ImageService {
             grayScale.add(new Color(gray, gray, gray));
         });
 
-        BufferedImage image = getImageFromColorList(grayScale);
+        BufferedImage img = getImageFromColorList(grayScale);
 
         File file = new File("grayScaleResult.png");
 
         try {
-            ImageIO.write(image, "png", file);
+            ImageIO.write(img, "png", file);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     // Function that will take an image and an optional otsusVariable and returns a black and white image.
-    public void produceBlackAndWhiteImage(Optional<Integer> otsusVariable) {
-        List<Color> colorList = getColorListFromImage();
+    public void produceBlackAndWhiteImage(MultipartFile image, Optional<Integer> otsusVariable) {
+        List<Color> colorList = getColorListFromImage(image);
         List<Integer> computableGrayScale = new ArrayList<>();
 
         colorList.forEach(color -> {
@@ -60,12 +61,12 @@ public class ImageService {
             computableGrayScale.add(gray);
         });
 
-        BufferedImage image = getBlackAndWhiteImageFromGrayScaleList(computableGrayScale, otsusVariable);
+        BufferedImage img = getBlackAndWhiteImageFromGrayScaleList(computableGrayScale, otsusVariable);
 
         File file = new File("blackAndWhiteResult.png");
 
         try {
-            ImageIO.write(image, "png", file);
+            ImageIO.write(img, "png", file);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -73,8 +74,8 @@ public class ImageService {
 
     // Function that will take in an image and an optional Otsu's variable and that will output a string of zeroes and ones
     // It works only for image up to a resolution of 256x256
-    public String getStringFromImage(Optional<Integer> otsusVariable) {
-        List<Color> colorList = getColorListFromImage();
+    public String getStringFromImage(MultipartFile image, Optional<Integer> otsusVariable) {
+        List<Color> colorList = getColorListFromImage(image);
         List<Integer> computableGrayScale = new ArrayList<>();
 
         if (width > 256 && height > 256) {
@@ -103,12 +104,12 @@ public class ImageService {
 
     // Function that will take an image and returns a list of colors from the image.
     // It will also set up global height and width variables.
-    private List<Color> getColorListFromImage() {
+    private List<Color> getColorListFromImage(MultipartFile image) {
         BufferedImage img = null;
         try {
-            img = ImageIO.read(new File("/Users/cfaucher/Dev/NonogramImageConverter/src/main/resources/yoshi.png"));
+            img = ImageIO.read(image.getInputStream());
         } catch (IOException e) {
-            System.out.println("pow");
+            e.printStackTrace();
         }
         assert img != null;
 

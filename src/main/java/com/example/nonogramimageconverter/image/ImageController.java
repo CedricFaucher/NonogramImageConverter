@@ -1,8 +1,10 @@
 package com.example.nonogramimageconverter.image;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -15,18 +17,20 @@ public class ImageController {
     }
 
     @GetMapping("/image/grayScale")
-    public void produceGrayScaleImage() {
-        service.produceGrayScaleImage();
+    public void produceGrayScaleImage(@RequestParam("image") MultipartFile image) {
+        service.produceGrayScaleImage(image);
     }
 
     @GetMapping("/image/blackAndWhite")
-    public void produceBlackAndWhiteImage(@RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable) {
-        service.produceBlackAndWhiteImage(otsusVariable);
+    public void produceBlackAndWhiteImage(@RequestParam("image") MultipartFile image,
+                                          @RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable) {
+        service.produceBlackAndWhiteImage(image, otsusVariable);
     }
 
     // 9 bits for width, 9 bits for height, rest for image
     @GetMapping("/image/string")
-    public String getStringFromImage(@RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable) {
-        return service.getStringFromImage(otsusVariable);
+    public String getStringFromImage(@RequestParam("image") MultipartFile image,
+                                     @RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable) {
+        return service.getStringFromImage(image, otsusVariable);
     }
 }
