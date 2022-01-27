@@ -74,7 +74,7 @@ public class ImageService {
 
     // Function that will take in an image and an optional Otsu's variable and that will output a string of zeroes and ones
     // It works only for image up to a resolution of 256x256
-    public String getStringFromImage(MultipartFile image, Optional<Integer> otsusVariable) {
+    public String getStringFromImage(MultipartFile image, Optional<Integer> otsusVariable, Integer shrinkAmount) {
         List<Color> colorList = getColorListFromImage(image);
         List<Integer> computableGrayScale = new ArrayList<>();
 
@@ -91,15 +91,15 @@ public class ImageService {
             computableGrayScale.add(gray);
         });
 
+        String zeroesAndOnes = getStringOfZeroesAndOnesFromGrayScaleList(computableGrayScale, otsusVariable, shrinkAmount);
         String widthInBinary = convertIntegerToBinaryString(width);
         String heightInBinary = convertIntegerToBinaryString(height);
-        String zeroesAndOnes = getStringOfZeroesAndOnesFromGrayScaleList(computableGrayScale, otsusVariable);
 
-        return "0".repeat(9 - widthInBinary.length()) +
+        return zeroesAndOnes != null ? "0".repeat(9 - widthInBinary.length()) +
                 widthInBinary +
                 "0".repeat(9 - heightInBinary.length()) +
                 heightInBinary +
-                zeroesAndOnes;
+                zeroesAndOnes : "Format right now needs to be even * even after shrink";
     }
 
     // Function that will take an image and returns a list of colors from the image.
@@ -161,13 +161,23 @@ public class ImageService {
 
     // Function that takes a list of grayScale represented by integers and returns a string of zeroes and ones.
     // This function also takes an optional otsusVariable that can alter the weight for the black vs white.
-    private String getStringOfZeroesAndOnesFromGrayScaleList(List<Integer> grayScales, Optional<Integer> otsusVariable) {
-        int otsus = otsusVariable.orElseGet(() -> otsusMethod(grayScales));
+    private String getStringOfZeroesAndOnesFromGrayScaleList(List<Integer> grayScales, Optional<Integer> otsusVariable, Integer shrinkAmount) {
+        List<Integer> shrinkedList = new ArrayList<>(grayScales);
+
+        for (int i = 0; i < shrinkAmount; i++) {
+            shrinkedList = shrinkImage(shrinkedList);
+            if (null == shrinkedList) {
+                return null;
+            }
+        }
+
+        List<Integer> finalShrinkedList = shrinkedList;
+        int otsus = otsusVariable.orElseGet(() -> otsusMethod(finalShrinkedList));
 
         StringBuilder zeroesAndOnes = new StringBuilder();
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                int gray = grayScales.get((j * height) + i);
+                int gray = finalShrinkedList.get((j * height) + i);
                 if (gray >= otsus) {
                     zeroesAndOnes.append("0");
                 } else {
@@ -222,5 +232,29 @@ public class ImageService {
         }
 
         return highestGrayValue;
+    }
+
+    // Function that takes a list of integers (grayScale) and apply a bilinear interpolation algorithm to reduce
+    // the image by four
+    private List<Integer> shrinkImage(List<Integer> colors) {
+        if (width % 2 != 0 || height % 2 != 0) {
+            return null;
+        }
+        List<Integer> shrinkedList = new ArrayList<>();
+        for (int i = 0; i < width; i += 2) {
+            for (int j = 0; j < height; j += 2) {
+                double mean = Math.round(
+                        (colors.get((i * height) + j) +
+                                colors.get((i * height) + (j + 1)) +
+                                colors.get(((i + 1) * height) + j) +
+                                colors.get(((i + 1) * height) + (j + 1))) / 4.0);
+                shrinkedList.add((int) mean);
+            }
+        }
+
+        width /= 2;
+        height /= 2;
+
+        return shrinkedList;
     }
 }

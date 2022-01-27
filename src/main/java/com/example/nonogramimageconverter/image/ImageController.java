@@ -30,7 +30,8 @@ public class ImageController {
     // 9 bits for width, 9 bits for height, rest for image
     @GetMapping("/image/string")
     public String getStringFromImage(@RequestParam("image") MultipartFile image,
-                                     @RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable) {
-        return service.getStringFromImage(image, otsusVariable);
+                                     @RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable,
+                                     @RequestParam(value = "shrinkAmount", defaultValue = "0") Integer shrinkAmount) {
+        return service.getStringFromImage(image, otsusVariable, shrinkAmount);
     }
 }
