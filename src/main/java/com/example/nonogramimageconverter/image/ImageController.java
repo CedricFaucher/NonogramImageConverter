@@ -31,7 +31,8 @@ public class ImageController {
     @GetMapping("/image/string")
     public String getStringFromImage(@RequestParam("image") MultipartFile image,
                                      @RequestParam(value = "otsusVariable", required = false) Optional<Integer> otsusVariable,
-                                     @RequestParam(value = "shrinkAmount", defaultValue = "0") Integer shrinkAmount) {
-        return service.getStringFromImage(image, otsusVariable, shrinkAmount);
+                                     @RequestParam(value = "shrinkAmount", defaultValue = "0") Integer shrinkAmount,
+                                     @RequestParam(value = "inverse", defaultValue = "false") Boolean inverse) {
+        return service.getStringFromImage(image, otsusVariable, shrinkAmount, inverse);
     }
 }

@@ -74,7 +74,7 @@ public class ImageService {
 
     // Function that will take in an image and an optional Otsu's variable and that will output a string of zeroes and ones
     // It works only for image up to a resolution of 256x256
-    public String getStringFromImage(MultipartFile image, Optional<Integer> otsusVariable, Integer shrinkAmount) {
+    public String getStringFromImage(MultipartFile image, Optional<Integer> otsusVariable, Integer shrinkAmount, Boolean inverse) {
         List<Color> colorList = getColorListFromImage(image);
         List<Integer> computableGrayScale = new ArrayList<>();
 
@@ -91,7 +91,7 @@ public class ImageService {
             computableGrayScale.add(gray);
         });
 
-        String zeroesAndOnes = getStringOfZeroesAndOnesFromGrayScaleList(computableGrayScale, otsusVariable, shrinkAmount);
+        String zeroesAndOnes = getStringOfZeroesAndOnesFromGrayScaleList(computableGrayScale, otsusVariable, shrinkAmount, inverse);
         String widthInBinary = convertIntegerToBinaryString(width);
         String heightInBinary = convertIntegerToBinaryString(height);
 
@@ -161,7 +161,8 @@ public class ImageService {
 
     // Function that takes a list of grayScale represented by integers and returns a string of zeroes and ones.
     // This function also takes an optional otsusVariable that can alter the weight for the black vs white.
-    private String getStringOfZeroesAndOnesFromGrayScaleList(List<Integer> grayScales, Optional<Integer> otsusVariable, Integer shrinkAmount) {
+    private String getStringOfZeroesAndOnesFromGrayScaleList(List<Integer> grayScales, Optional<Integer> otsusVariable,
+                                                             Integer shrinkAmount, Boolean inverse) {
         List<Integer> shrinkedList = new ArrayList<>(grayScales);
 
         for (int i = 0; i < shrinkAmount; i++) {
@@ -179,9 +180,9 @@ public class ImageService {
             for (int j = 0; j < width; j++) {
                 int gray = finalShrinkedList.get((j * height) + i);
                 if (gray >= otsus) {
-                    zeroesAndOnes.append("0");
+                    zeroesAndOnes.append(inverse ? "1" : "0");
                 } else {
-                    zeroesAndOnes.append("1");
+                    zeroesAndOnes.append(inverse ? "0" : "1");
                 }
             }
         }
