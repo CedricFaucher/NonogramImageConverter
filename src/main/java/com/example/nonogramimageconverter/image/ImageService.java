@@ -21,6 +21,7 @@ public class ImageService {
     private final double BLUE_WEIGHT = 0.114;
     private int width = 0;
     private int height = 0;
+    private int otsus = 0;
 
     // Function that will take an image and returns a gray scale image.
     public void produceGrayScaleImage(MultipartFile image) {
@@ -74,12 +75,14 @@ public class ImageService {
 
     // Function that will take in an image and an optional Otsu's variable and that will output a string of zeroes and ones
     // It works only for image up to a resolution of 256x256
-    public String getStringFromImage(MultipartFile image, Optional<Integer> otsusVariable, Integer shrinkAmount, Boolean inverse) {
+    public ImageAsString getStringFromImage(MultipartFile image, Optional<Integer> otsusVariable, Integer shrinkAmount, Boolean inverse) {
         List<Color> colorList = getColorListFromImage(image);
         List<Integer> computableGrayScale = new ArrayList<>();
+        String errorMessage;
 
         if (width > 256 && height > 256) {
-            return "Wrong resolution for image. It should be maximum 256x256";
+            errorMessage = "Wrong resolution for image. It should be maximum 256x256";
+            return ImageAsString.builder().image(errorMessage).build();
         }
 
         colorList.forEach(color -> {
@@ -95,11 +98,25 @@ public class ImageService {
         String widthInBinary = convertIntegerToBinaryString(width);
         String heightInBinary = convertIntegerToBinaryString(height);
 
-        return zeroesAndOnes != null ? "0".repeat(9 - widthInBinary.length()) +
+        if (null == zeroesAndOnes) {
+            errorMessage = "Format right now needs to be even * even after shrink";
+            return ImageAsString.builder().image(errorMessage).build();
+        }
+
+        String imageAsString = "0".repeat(9 - widthInBinary.length()) +
                 widthInBinary +
                 "0".repeat(9 - heightInBinary.length()) +
                 heightInBinary +
-                zeroesAndOnes : "Format right now needs to be even * even after shrink";
+                zeroesAndOnes;
+
+        return ImageAsString.builder()
+                .image(imageAsString)
+                .width(width)
+                .height(height)
+                .otsusVariable(otsus)
+                .shrinkAmount(shrinkAmount)
+                .inverse(inverse)
+                .build();
     }
 
     // Function that will take an image and returns a list of colors from the image.
@@ -145,7 +162,7 @@ public class ImageService {
     // Function that takes a list of grayScale represented by integers and returns an image from that list.
     // This function also takes an optional otsusVariable that can alter the weight for the black vs white.
     private BufferedImage getBlackAndWhiteImageFromGrayScaleList(List<Integer> grayScales, Optional<Integer> otsusVariable) {
-        int otsus = otsusVariable.orElseGet(() -> otsusMethod(grayScales));
+        otsus = otsusVariable.orElseGet(() -> otsusMethod(grayScales));
 
         List<Color> blackAndWhiteColors = new ArrayList<>();
         grayScales.forEach(gray -> {
@@ -173,7 +190,7 @@ public class ImageService {
         }
 
         List<Integer> finalShrinkedList = shrinkedList;
-        int otsus = otsusVariable.orElseGet(() -> otsusMethod(finalShrinkedList));
+        otsus = otsusVariable.orElseGet(() -> otsusMethod(finalShrinkedList));
 
         StringBuilder zeroesAndOnes = new StringBuilder();
         for (int i = 0; i < height; i++) {
