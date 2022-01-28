@@ -1,5 +1,7 @@
 package com.example.nonogramimageconverter.image;
 
+import com.example.nonogramimageconverter.problem.ImageIOException;
+import com.example.nonogramimageconverter.problem.WrongFormatException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,7 +46,7 @@ public class ImageService {
         try {
             ImageIO.write(img, "png", file);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ImageIOException("There was an issue while trying to create the new grayscale image");
         }
     }
 
@@ -69,7 +71,7 @@ public class ImageService {
         try {
             ImageIO.write(img, "png", file);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ImageIOException("There was an issue while trying to create the new black and white image");
         }
     }
 
@@ -78,11 +80,9 @@ public class ImageService {
     public ImageAsString getStringFromImage(MultipartFile image, Optional<Integer> otsusVariable, Integer shrinkAmount, Boolean inverse) {
         List<Color> colorList = getColorListFromImage(image);
         List<Integer> computableGrayScale = new ArrayList<>();
-        String errorMessage;
 
         if (width > 256 && height > 256) {
-            errorMessage = "Wrong resolution for image. It should be maximum 256x256";
-            return ImageAsString.builder().image(errorMessage).build();
+            throw new WrongFormatException("Wrong resolution for image. It should be maximum 256x256");
         }
 
         colorList.forEach(color -> {
@@ -97,11 +97,6 @@ public class ImageService {
         String zeroesAndOnes = getStringOfZeroesAndOnesFromGrayScaleList(computableGrayScale, otsusVariable, shrinkAmount, inverse);
         String widthInBinary = convertIntegerToBinaryString(width);
         String heightInBinary = convertIntegerToBinaryString(height);
-
-        if (null == zeroesAndOnes) {
-            errorMessage = "Format right now needs to be even * even after shrink";
-            return ImageAsString.builder().image(errorMessage).build();
-        }
 
         String imageAsString = "0".repeat(9 - widthInBinary.length()) +
                 widthInBinary +
@@ -122,13 +117,12 @@ public class ImageService {
     // Function that will take an image and returns a list of colors from the image.
     // It will also set up global height and width variables.
     private List<Color> getColorListFromImage(MultipartFile image) {
-        BufferedImage img = null;
+        BufferedImage img;
         try {
             img = ImageIO.read(image.getInputStream());
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ImageIOException("There was an issue while trying to read the image provided");
         }
-        assert img != null;
 
         width = img.getWidth();
         height = img.getHeight();
@@ -184,9 +178,6 @@ public class ImageService {
 
         for (int i = 0; i < shrinkAmount; i++) {
             shrinkedList = shrinkImage(shrinkedList);
-            if (null == shrinkedList) {
-                return null;
-            }
         }
 
         List<Integer> finalShrinkedList = shrinkedList;
@@ -256,7 +247,7 @@ public class ImageService {
     // the image by four
     private List<Integer> shrinkImage(List<Integer> colors) {
         if (width % 2 != 0 || height % 2 != 0) {
-            return null;
+            throw new WrongFormatException("Format right now needs to be even * even after shrink");
         }
         List<Integer> shrinkedList = new ArrayList<>();
         for (int i = 0; i < width; i += 2) {
